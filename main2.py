@@ -1,6 +1,7 @@
 
 #User_name администраторов
-ADMIN_USER = '    return message.from_user.first_name in ADMIN_USERKafnik'
+ADMIN_USER = 'Kafnik'
 
  # Функция проверки администратора
 def is_admin(message):
+    return message.from_user.first_name in ADMIN_USER
