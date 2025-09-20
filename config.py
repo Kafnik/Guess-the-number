@@ -1,5 +1,5 @@
 
-TELEGRAM_TOKEN = 'TELEGRAM_TOKEN'
+TELEGRAM_TOKEN = '8452848990:AAEdqyU2aqM0FeueUeGsg4pPtZCwLPrz3Ag'
 
 #User_name администраторов
 ADMIN_USER = 'Kafnik'
