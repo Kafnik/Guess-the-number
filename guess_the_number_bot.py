@@ -40,7 +40,6 @@ def complet_games(message):
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    bot.send_message(message.chat.id, '❌У бота ведутся тех.работы не отвлекайте нас. Нам жаль вся информация на канеле: https://t.me/+xtbO7MiUA180NzYy')
     msg = bot.send_message(message.chat.id, 'OpenbotAI')
     sleep(1)
     bot.edit_message_text(f'Привет {message.from_user.first_name}. \nГотов побеждать Тьму ! Если да то напиши /games', message_id=msg.message_id, chat_id=message.chat.id)
