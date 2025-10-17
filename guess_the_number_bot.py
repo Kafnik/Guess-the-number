@@ -6,123 +6,145 @@ from telebot import types
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
-#Глобальные перемнные
-admin_down = False
-user_update = []
-VERSION = '1.2'
+#---------Главные переменные--------
+VERSION = '1.3'
+error = True
 active_game = False
-secret_number = 0
-start_number = 0
-play_number =  0
-stop_numder = 0
-X = 5
+events = [ 
+        "Ты нашёл светящуюся тыкву 🎃",
+        "Призрак прошёл сквозь тебя 👻",
+        "Тебя укусил зомби 🧟",
+        "Ведьма угостила зельем 💀",
+        "Ты сбежал от чёрной кошки 🐈‍⬛",
+        "Ты услышал шёпот из темноты 😱",
+        "Ты получил подарок от скелета ☠️",
+        "Ты поймал летучую мышь 🦇"]
+nasty = ["😝Гадость", "🍬Сладость"]
+hearts = 5
+x = 10
+
+def hallowen(message):
+    markup = types.InlineKeyboardMarkup(row_width=2)
+    tp1 = types.InlineKeyboardButton('🎡Колесо ужасов', callback_data='btn1')
+    tp2 = types.InlineKeyboardButton('🍬Сладость или гадость', callback_data='btn2')
+    markup.add(tp1, tp2)
+    bot.send_message(message.chat.id, f'Вот все игры на Хэллуин', reply_markup=markup)
+
+def complet_games(message):
+    markup = types.InlineKeyboardMarkup(row_width=2)
+    btn1 = types.InlineKeyboardButton('🎡Колесо ужасов', callback_data='btn1')
+    btn2 = types.InlineKeyboardButton('🍬Сладость или гадость', callback_data='btn2')
+    btn3 = types.InlineKeyboardButton('Отгодай число', callback_data='btn3')
+    markup.add(btn1, btn2, btn3)
+    bot.send_message(message.chat.id, '✅ Игра завершена ! Выберете команду 👇', reply_markup=markup)
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    if not is_admin(message): 
-        bot.reply_to(message, '❌Бот прекратил работу на не определеное время. Нам жаль вся информация на канеле: https://t.me/+xtbO7MiUA180NzYy')
-    else:
-        chat_id = message.chat.id
-        user_update.append(chat_id)
-        bot.send_message(message.chat.id, 'OpenbotAI')
-        sleep(1)
-        bot.send_message(message.chat.id, f'Привет {message.from_user.first_name}. \nЭто бот для угадывания чисел. Напишите команду /play, что бы начать игру!')
+    bot.send_message(message.chat.id, '❌У бота ведутся тех.работы не отвлекайте нас. Нам жаль вся информация на канеле: https://t.me/+xtbO7MiUA180NzYy')
+    msg = bot.send_message(message.chat.id, 'OpenbotAI')
+    sleep(1)
+    bot.edit_message_text(f'Привет {message.from_user.first_name}. \nГотов побеждать Тьму ! Если да то напиши /games', message_id=msg.message_id, chat_id=message.chat.id)
    
- 
+#---------------Меню игр-----------------
+@bot.message_handler(commands=['halloween'])
+def bot_commads_user(message):
+    hallowen(message)
 
-@bot.message_handler(commands=['credit'])
-def credit_user(message):
-    if not  is_admin(message): 
-        bot.reply_to(message, '❌Бот прекратил работу на не определеное время. Нам жаль вся информация на канеле: https://t.me/+xtbO7MiUA180NzYy')
+@bot.message_handler(commands=['games'])
+def menu_games(message):
+    if not error:
+     bot.send_message(message.chat.id, '❌У бота ведутся тех.работы не отвлекайте нас. Нам жаль вся информация на канеле: https://t.me/+xtbO7MiUA180NzYy')
     else:
-        bot.reply_to(message, 'В следущих обновлениях !')
+        markup = types.InlineKeyboardMarkup(row_width=2)
+        btn1 = types.InlineKeyboardButton('🎡Колесо ужасов', callback_data='btn1')
+        btn2 = types.InlineKeyboardButton('🍬Сладость или гадость', callback_data='btn2')
+        btn3 = types.InlineKeyboardButton('Отгодай число', callback_data='btn3')
+        markup.add(btn1, btn2, btn3)
+        bot.send_message(message.chat.id, 'Меню игр открыто !', reply_markup=markup)
 
-
-@bot.message_handler(commands=['update'])
-def updute_user(message):
-    if not is_admin(message): 
-        bot.reply_to(message, '❌Бот прекратил работу на не определеное время. Нам жаль вся информация на канеле: https://t.me/+xtbO7MiUA180NzYy')
-    else:
-          text = f'Обновление: {VERSION} \nДобавлинно много команд, добавили команду /info. \nИзминили угадывание чисел на 10 было 100. \nОстольное системное.'
-    for chat_id in user_update:
-        try:
-            bot.send_message(chat_id, text)
-        except Exception as e:
-            bot.reply_to(message, f'Не удолось оправить {chat_id}: {e}')
-
-@bot.message_handler(commands=['admins'])
-def admins_users(message):
-    if not is_admin(message): 
-        bot.reply_to(message, '❌Бот прекратил работу на не определеное время. Нам жаль вся информация на канеле: https://t.me/+xtbO7MiUA180NzYy')
-    else:
-        bot.send_message(message.chat.id, f'Сейчас администраторы на посту: \n{ADMIN_USER}')
-
-@bot.message_handler(commands=['admin_panel'])
-def admin_panel_bot(message):
-    global admin_down
-    if not is_admin(message):
-        bot.reply_to(message, 'Команда недоступна вам!')
-        return
-    
-    if not admin_down:
-        bot.reply_to(message, 'Ошибка админ панель временно не работает!') 
-        return
-    
-    markup = types.InlineKeyboardMarkup(row_width=1)
-    stats = types.InlineKeyboardButton('Статистика', callback_data='stats1')
-    markup.add(stats)
-    bot.send_message(message.chat.id, f'Добро пожаловать {message.from_user.first_name}', reply_markup=markup)
-
-
-@bot.callback_query_handler(func=lambda call:True)
+@bot.callback_query_handler(func=lambda m: True)
 def callback(call):
-    if call.message:
-        if call.data == 'stats1':
-            bot.send_message(call.message.chat.id, f'За все время запускали бота: \n{start_number} \n и играли в игру: \n{play_number}')
+    if call.data == 'btn1':
+        num = random.choice(events)
+        bot.send_message(call.message.chat.id, f'🎡*Колесо крутиться...*\n\n {num}', parse_mode="Markdown")
+        sleep(1)
+        bot.answer_callback_query(call.id)
+        complet_games(call.message)
+
+    elif call.data == 'btn2':
+        num = random.choice(nasty)
+        bot.send_message(call.message.chat.id, f'Тебе выподает: {num}')
+        sleep(1)
+        bot.answer_callback_query(call.id)
+        complet_games(call.message)
+
+    elif call.data == 'sistem1':
+        error = False
+        bot.send_message(call.message.chat.id, f'Бот переведенн в тех.работы')
+
+    elif call.data == 'btn3':
+        global active_game
+        active_game = True
+        bot.send_message(call.message.chat.id, f'🕷Игра началась! Я загадал число от 1 до {x} \n У тебя есть 5 жизней !')
+
+@bot.message_handler(commands=['sistem'])
+def sistem(message):
+    if not is_admin (message):
+        markup = types.InlineKeyboardMarkup(row_width=2)
+        num1 = types.InlineKeyboardButton('Отключение на техработы', callback_data='sistem1')
+        markup.add(num1)
+        bot.message_message(message.chat.id, f'Выбирите действие:', reply_markup=markup)
+    else:
+        bot.send_message(message.chat.id, '❌Эта команда вам не доступна !')
 
 @bot.message_handler(commands=['help'])
 def info_bot(message):
-    if not is_admin(message): 
-        bot.reply_to(message, '❌Бот прекратил работу на не определеное время. Нам жаль вся информация на канеле: https://t.me/+xtbO7MiUA180NzYy')
+    if not error(message): 
+        bot.reply_to(message, '❌У бота ведутся тех.работы не отвлекайте нас. Нам жаль вся информация на канеле: https://t.me/+xtbO7MiUA180NzYy')
     else:
-        bot.send_message(message.chat.id, 'Список команд /start, /play, /help')
-
-@bot.message_handler(commands=['play'])
-def play_start(message, x=X):
-    if not is_admin(message): 
-        bot.reply_to(message, '❌Бот прекратил работу на не определеное время. Нам жаль вся информация на канеле: https://t.me/+xtbO7MiUA180NzYy')
-    else:
-        global  play_number, active_game
-    play_number += 1
-    active_game = False
-    bot.send_message(message.chat.id, f'Угадай число от 1 до {x}. Введите число')
+        bot.send_message(message.chat.id, 'Список команд /start, /games, /help, /helloween')
 
 @bot.message_handler(commands=['info'])
 def info_bot(message):
-    if is_admin(message): 
-        bot.reply_to(message, '❌Бот прекратил работу на не определеное время. Нам жаль вся информация на канеле: https://t.me/+xtbO7MiUA180NzYy')
+    if not is_admin(message): 
+        bot.reply_to(message, '❌У бота ведутся тех.работы не отвлекайте нас. Нам жаль вся информация на канеле: https://t.me/+xtbO7MiUA180NzYy')
     else:
-        bot.send_message(message.chat.id, f'Бот cделан команиями: OpenbotAI и VECTORBOT \nНо большую чать выполнила комания: OpenbotAI \nЧто есть прикольного, команда /credit. \nВерсия бота: {VERSION}')
+        bot.send_message(message.chat.id, f'Бот cделан команиями: OpenbotAI и VECTORBOT \nНо большую чать выполнила комания: OpenbotAI \nЧто есть прикольного, команда /halloween. \nВерсия бота: {VERSION}')
 
-@bot.message_handler() 
-def an_chek(message, x=X):
-    global secret_number, active_game
-    if not active_game:
+
+@bot.message_handler(func=lambda message: True)
+def message_bot_int(message):
+    global hearts, active_game, x
+    if not active_game: 
         return
-
+    
     try:
-        num = int(message.text)
-        if 1 <= num <= x:
-          secret_number = random.randint(1, x)
-          if num == secret_number:
-              bot.reply_to(message, f'Ты угадал !')
-          else:
-              bot.reply_to(message, f'Не угадал! Число {secret_number}')
-              active_game = False
+        guess = int(message.text)
+
+        if 1 <= guess <= x:
+            secret = random.randint(1, x)
+            if guess == secret:
+                bot.reply_to(message, f'🎉Ты победил тьму и угодал число {secret}')
+                active_game = False
+                sleep(1)
+                complet_games(message)
+            else:
+                hearts -= 1
+                if hearts == 0:
+                    bot.reply_to(message, f'💀 Ты проиграл.... Тьма поглотила тебя !\n число {secret}. \n Если хочешь отомсти судьбе ? Напиши /games')
+                    sleep(1)                    
+                    complet_games(message)
+                    hearts = 5
+                    active_game = False
+                else:
+                 bot.reply_to(message, f'💀Осталось жизней: {hearts}')
         else:
-            bot.reply_to(message, f'Число должно быть от 1 до {x}')
+            bot.reply_to(message, f'🦇Число должно быть 1 до {x}')
+
     except ValueError:
-          bot.reply_to(message, 'Пожалуйста введите корректное число!')
+         bot.reply_to(message, "👻 Это не число... Призраки не понимают слов !'")
+
+
 
 print('Бот угодай число запущен!')
 bot.polling(non_stop=True)
